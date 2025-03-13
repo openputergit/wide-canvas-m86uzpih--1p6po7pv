@@ -1,0 +1,1842 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LibMate
+    - Smart Library Seat Booking</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #f5f7fa;
+        }
+        .hero-gradient {
+            background: linear-gradient(135deg, #4ba3c3 0%, #2c7da0 100%);
+        }
+        .library-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .library-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        .seat {
+            transition: all 0.2s ease;
+        }
+        .seat:hover:not(.seat-unavailable) {
+            transform: scale(1.05);
+        }
+        .seat-available {
+            background-color: #10B981;
+        }
+        .seat-selected {
+            background-color: #3B82F6;
+        }
+        .seat-unavailable {
+            background-color: #EF4444;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="bg-white shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <a href="#" class="text-2xl font-bold text-blue-600">LibrarySeats</a>
+                </div>
+                <div class="hidden md:flex items-center space-x-4">
+                    <a href="#" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-blue-600">Home</a>
+                    <a href="#libraries" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-blue-600">Libraries</a>
+                    <a href="#how-it-works" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-blue-600">How It Works</a>
+                    <a href="#" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-blue-600">Contact</a>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <button id="loginBtn" class="px-4 py-2 border border-blue-600 rounded-md text-blue-600 hover:bg-blue-50">Login</button>
+                    <button id="signupBtn" class="px-4 py-2 bg-blue-600 rounded-md text-white hover:bg-blue-700">Sign Up</button>
+                    <button id="dashboardBtn" class="px-4 py-2 bg-green-600 rounded-md text-white hover:bg-green-700 hidden">Dashboard</button>
+                </div>
+                <div class="md:hidden flex items-center">
+                    <button id="menuBtn" class="text-gray-500 hover:text-gray-700">
+                        <i class="bi bi-list text-2xl"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <!-- Mobile menu, show/hide based on menu state -->
+        <div id="mobileMenu" class="md:hidden hidden">
+            <div class="px-2 pt-2 pb-3 space-y-1">
+                <a href="#" class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-blue-600">Home</a>
+                <a href="#libraries" class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-blue-600">Libraries</a>
+                <a href="#how-it-works" class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-blue-600">How It Works</a>
+                <a href="#" class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-blue-600">Contact</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero-gradient text-white py-16 md:py-24">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex flex-col md:flex-row items-center justify-between">
+                <div class="md:w-1/2 mb-10 md:mb-0">
+                    <h1 class="text-3xl md:text-4xl font-bold mb-4">Find and Book the Perfect Library Seat</h1>
+                    <p class="text-lg mb-6">Secure your ideal study space with our easy-to-use booking system. No more wandering around or uncertainty - your seat is guaranteed.</p>
+                    <div class="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4">
+                        <button id="findSeatBtn" class="px-6 py-3 bg-white text-blue-600 font-medium rounded-md hover:bg-blue-50">Find a Seat Now</button>
+                        <button id="learnMoreBtn" class="px-6 py-3 border border-white text-white font-medium rounded-md hover:bg-white hover:bg-opacity-10">Learn More</button>
+                    </div>
+                </div>
+                <div class="md:w-1/2">
+                    <img src="https://images.unsplash.com/photo-1521587760476-6c12a4b040da?ixlib=rb-1.2.1&auto=format&fit=crop&w=1200&q=80" alt="Library Interior" class="rounded-lg shadow-xl">
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Search Section -->
+    <section class="bg-white py-10 -mt-10 rounded-t-3xl relative z-10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="bg-white shadow-lg rounded-lg p-6">
+                <h2 class="text-2xl font-semibold mb-4 text-center text-gray-800">Find Your Ideal Study Spot</h2>
+                <div class="flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4">
+                    <div class="flex-1">
+                        <label for="location" class="block text-sm font-medium text-gray-700 mb-1">Location</label>
+                        <select id="location" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                            <option value="">All Locations</option>
+                            <option value="downtown">Downtown</option>
+                            <option value="uptown">Uptown</option>
+                            <option value="campus">Campus</option>
+                            <option value="suburb">Suburb</option>
+                        </select>
+                    </div>
+                    <div class="flex-1">
+                        <label for="date" class="block text-sm font-medium text-gray-700 mb-1">Date</label>
+                        <input type="date" id="date" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                    <div class="flex-1">
+                        <label for="time" class="block text-sm font-medium text-gray-700 mb-1">Time</label>
+                        <select id="time" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                            <option value="morning">Morning (8AM - 12PM)</option>
+                            <option value="afternoon">Afternoon (12PM - 5PM)</option>
+                            <option value="evening">Evening (5PM - 9PM)</option>
+                        </select>
+                    </div>
+                    <div class="flex-1">
+                        <label for="search" class="block text-sm font-medium text-gray-700 mb-1">Search</label>
+                        <div class="relative">
+                            <input type="text" id="search" placeholder="Search libraries..." class="w-full px-4 py-2 pr-10 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                            <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                                <i class="bi bi-search text-gray-400"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-4 flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4">
+                    <div class="flex items-center space-x-2">
+                        <input type="checkbox" id="wifi" class="rounded text-blue-600 focus:ring-blue-500">
+                        <label for="wifi" class="text-sm text-gray-700">WiFi</label>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <input type="checkbox" id="power-outlet" class="rounded text-blue-600 focus:ring-blue-500">
+                        <label for="power-outlet" class="text-sm text-gray-700">Power Outlet</label>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <input type="checkbox" id="quiet-zone" class="rounded text-blue-600 focus:ring-blue-500">
+                        <label for="quiet-zone" class="text-sm text-gray-700">Quiet Zone</label>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <input type="checkbox" id="group-table" class="rounded text-blue-600 focus:ring-blue-500">
+                        <label for="group-table" class="text-sm text-gray-700">Group Table</label>
+                    </div>
+                    <div class="flex-1 text-right">
+                        <button id="searchBtn" class="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Search Seats</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Featured Libraries -->
+    <section id="libraries" class="py-12 bg-gray-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 class="text-3xl font-bold text-gray-900 mb-2 text-center">Featured Libraries</h2>
+            <p class="text-lg text-gray-600 mb-10 text-center">Browse our selection of top-rated study spaces</p>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <!-- Library 1 -->
+                <div class="library-card bg-white rounded-lg overflow-hidden shadow-md">
+                    <img src="https://images.unsplash.com/photo-1568667256549-094345857637?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80" alt="Central Library" class="w-full h-48 object-cover">
+                    <div class="p-6">
+                        <div class="flex justify-between items-start mb-2">
+                            <h3 class="text-xl font-semibold">Central Library</h3>
+                            <div class="flex items-center">
+                                <i class="bi bi-star-fill text-yellow-400"></i>
+                                <span class="ml-1 text-gray-600">4.8</span>
+                            </div>
+                        </div>
+                        <p class="text-gray-500 text-sm mb-3">Downtown, 12 min walk from transit</p>
+                        <div class="flex flex-wrap gap-2 mb-4">
+                            <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded-md text-xs">WiFi</span>
+                            <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded-md text-xs">Power Outlets</span>
+                            <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded-md text-xs">Quiet Zone</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="font-medium text-gray-900">$5.00 / hour</span>
+                            <button class="view-seats-btn px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700" data-library="central">View Seats</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Library 2 -->
+                <div class="library-card bg-white rounded-lg overflow-hidden shadow-md">
+                    <img src="https://images.unsplash.com/photo-1569701813229-33284b643e3c?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80" alt="University Library" class="w-full h-48 object-cover">
+                    <div class="p-6">
+                        <div class="flex justify-between items-start mb-2">
+                            <h3 class="text-xl font-semibold">University Library</h3>
+                            <div class="flex items-center">
+                                <i class="bi bi-star-fill text-yellow-400"></i>
+                                <span class="ml-1 text-gray-600">4.6</span>
+                            </div>
+                        </div>
+                        <p class="text-gray-500 text-sm mb-3">Campus, 5 min walk from bus stop</p>
+                        <div class="flex flex-wrap gap-2 mb-4">
+                            <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded-md text-xs">WiFi</span>
+                            <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded-md text-xs">Group Tables</span>
+                            <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded-md text-xs">Cafe</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="font-medium text-gray-900">$4.50 / hour</span>
+                            <button class="view-seats-btn px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700" data-library="university">View Seats</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Library 3 -->
+                <div class="library-card bg-white rounded-lg overflow-hidden shadow-md">
+                    <img src="https://images.unsplash.com/photo-1580537659466-0a9bfa916a54?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80" alt="Tech Hub" class="w-full h-48 object-cover">
+                    <div class="p-6">
+                        <div class="flex justify-between items-start mb-2">
+                            <h3 class="text-xl font-semibold">Tech Hub</h3>
+                            <div class="flex items-center">
+                                <i class="bi bi-star-fill text-yellow-400"></i>
+                                <span class="ml-1 text-gray-600">4.9</span>
+                            </div>
+                        </div>
+                        <p class="text-gray-500 text-sm mb-3">Uptown, 8 min walk from transit</p>
+                        <div class="flex flex-wrap gap-2 mb-4">
+                            <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded-md text-xs">High-speed WiFi</span>
+                            <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded-md text-xs">Power Outlets</span>
+                            <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded-md text-xs">Private Booths</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="font-medium text-gray-900">$6.50 / hour</span>
+                            <button class="view-seats-btn px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700" data-library="tech">View Seats</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="text-center mt-10">
+                <button class="px-6 py-3 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700">View All Libraries</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works Section -->
+    <section id="how-it-works" class="py-16 bg-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 class="text-3xl font-bold text-gray-900 mb-2 text-center">How It Works</h2>
+            <p class="text-lg text-gray-600 mb-12 text-center">Book your perfect study space in three simple steps</p>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <!-- Step 1 -->
+                <div class="text-center">
+                    <div class="inline-flex items-center justify-center h-20 w-20 rounded-full bg-blue-100 text-blue-600 text-2xl font-semibold mb-4">1</div>
+                    <h3 class="text-xl font-semibold mb-3">Search</h3>
+                    <p class="text-gray-600">Browse available libraries, filter by location, amenities, and check real-time seat availability.</p>
+                </div>
+                
+                <!-- Step 2 -->
+                <div class="text-center">
+                    <div class="inline-flex items-center justify-center h-20 w-20 rounded-full bg-blue-100 text-blue-600 text-2xl font-semibold mb-4">2</div>
+                    <h3 class="text-xl font-semibold mb-3">Book</h3>
+                    <p class="text-gray-600">Select your preferred seat, choose your time slot, and complete your payment securely online.</p>
+                </div>
+                
+                <!-- Step 3 -->
+                <div class="text-center">
+                    <div class="inline-flex items-center justify-center h-20 w-20 rounded-full bg-blue-100 text-blue-600 text-2xl font-semibold mb-4">3</div>
+                    <h3 class="text-xl font-semibold mb-3">Study</h3>
+                    <p class="text-gray-600">Receive your booking confirmation, arrive at the library, and enjoy your guaranteed study space.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Testimonials -->
+    <section class="py-16 bg-gray-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 class="text-3xl font-bold text-gray-900 mb-2 text-center">What Our Users Say</h2>
+            <p class="text-lg text-gray-600 mb-12 text-center">Hear from students and professionals who use our platform</p>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <!-- Testimonial 1 -->
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <div class="flex items-center mb-4">
+                        <div class="h-12 w-12 rounded-full bg-blue-200 flex items-center justify-center text-blue-600 font-bold text-lg">JD</div>
+                        <div class="ml-4">
+                            <h4 class="font-semibold">Jessica Davis</h4>
+                            <p class="text-sm text-gray-500">Graduate Student</p>
+                        </div>
+                    </div>
+                    <p class="text-gray-600 mb-4">"LibrarySeats has been a game-changer for my thesis work. I can book my favorite quiet corner ahead of time and know it will be available when I arrive."</p>
+                    <div class="flex text-yellow-400">
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                    </div>
+                </div>
+                
+                <!-- Testimonial 2 -->
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <div class="flex items-center mb-4">
+                        <div class="h-12 w-12 rounded-full bg-blue-200 flex items-center justify-center text-blue-600 font-bold text-lg">MT</div>
+                        <div class="ml-4">
+                            <h4 class="font-semibold">Michael Thompson</h4>
+                            <p class="text-sm text-gray-500">Software Developer</p>
+                        </div>
+                    </div>
+                    <p class="text-gray-600 mb-4">"Working remotely is so much better now. I can find a great study space with reliable WiFi and power outlets whenever I need a change of scenery."</p>
+                    <div class="flex text-yellow-400">
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-half"></i>
+                    </div>
+                </div>
+                
+                <!-- Testimonial 3 -->
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <div class="flex items-center mb-4">
+                        <div class="h-12 w-12 rounded-full bg-blue-200 flex items-center justify-center text-blue-600 font-bold text-lg">SR</div>
+                        <div class="ml-4">
+                            <h4 class="font-semibold">Sarah Rodriguez</h4>
+                            <p class="text-sm text-gray-500">Undergraduate Student</p>
+                        </div>
+                    </div>
+                    <p class="text-gray-600 mb-4">"As someone who studies better outside my dorm, this app has saved me so much time. No more wandering around looking for an open seat during finals week!"</p>
+                    <div class="flex text-yellow-400">
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="hero-gradient py-16">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <h2 class="text-3xl font-bold text-white mb-4">Ready to find your perfect study spot?</h2>
+            <p class="text-xl text-white mb-8 max-w-3xl mx-auto">Join thousands of students and professionals who use LibrarySeats to book their ideal study space.</p>
+            <div class="flex flex-col sm:flex-row justify-center space-y-4 sm:space-y-0 sm:space-x-4">
+                <button class="px-8 py-3 bg-white text-blue-600 font-medium rounded-md hover:bg-blue-50">Sign Up Now</button>
+                <button class="px-8 py-3 border border-white text-white font-medium rounded-md hover:bg-white hover:bg-opacity-10">Browse Libraries</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white py-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                <!-- Company Info -->
+                <div>
+                    <h3 class="text-xl font-bold mb-4">LibrarySeats</h3>
+                    <p class="text-gray-300 mb-4">Transforming how people find and book library study spaces.</p>
+                    <div class="flex space-x-4">
+                        <a href="#" class="text-gray-300 hover:text-white"><i class="bi bi-facebook"></i></a>
+                        <a href="#" class="text-gray-300 hover:text-white"><i class="bi bi-twitter"></i></a>
+                        <a href="#" class="text-gray-300 hover:text-white"><i class="bi bi-instagram"></i></a>
+                        <a href="#" class="text-gray-300 hover:text-white"><i class="bi bi-linkedin"></i></a>
+                    </div>
+                </div>
+                
+                <!-- Quick Links -->
+                <div>
+                    <h4 class="text-lg font-semibold mb-4">Quick Links</h4>
+                    <ul class="space-y-2">
+                        <li><a href="#" class="text-gray-300 hover:text-white">Home</a></li>
+                        <li><a href="#" class="text-gray-300 hover:text-white">About Us</a></li>
+                        <li><a href="#" class="text-gray-300 hover:text-white">Libraries</a></li>
+                        <li><a href="#" class="text-gray-300 hover:text-white">How It Works</a></li>
+                        <li><a href="#" class="text-gray-300 hover:text-white">Contact</a></li>
+                    </ul>
+                </div>
+                
+                <!-- Resources -->
+                <div>
+                    <h4 class="text-lg font-semibold mb-4">Resources</h4>
+                    <ul class="space-y-2">
+                        <li><a href="#" class="text-gray-300 hover:text-white">Help Center</a></li>
+                        <li><a href="#" class="text-gray-300 hover:text-white">FAQs</a></li>
+                        <li><a href="#" class="text-gray-300 hover:text-white">Pricing</a></li>
+                        <li><a href="#" class="text-gray-300 hover:text-white">Library Partners</a></li>
+                        <li><a href="#" class="text-gray-300 hover:text-white">Blog</a></li>
+                    </ul>
+                </div>
+                
+                <!-- Newsletter -->
+                <div>
+                    <h4 class="text-lg font-semibold mb-4">Stay Updated</h4>
+                    <p class="text-gray-300 mb-4">Subscribe to our newsletter for the latest updates and offers.</p>
+                    <div class="flex">
+                        <input type="email" placeholder="Your email" class="px-4 py-2 w-full rounded-l-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-800">
+                        <button class="bg-blue-600 px-4 py-2 rounded-r-md hover:bg-blue-700">
+                            <i class="bi bi-send"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="border-t border-gray-700 mt-10 pt-8 flex flex-col md:flex-row justify-between items-center">
+                <p class="text-gray-300 text-sm">© 2023 LibrarySeats. All rights reserved.</p>
+                <div class="flex space-x-6 mt-4 md:mt-0">
+                    <a href="#" class="text-gray-300 hover:text-white text-sm">Privacy Policy</a>
+                    <a href="#" class="text-gray-300 hover:text-white text-sm">Terms of Service</a>
+                    <a href="#" class="text-gray-300 hover:text-white text-sm">Cookie Policy</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Login Modal -->
+    <div id="loginModal" class="fixed inset-0 flex items-center justify-center z-50 hidden">
+        <div class="fixed inset-0 bg-black opacity-50"></div>
+        <div class="bg-white rounded-lg p-8 max-w-md w-full relative z-10">
+            <button id="closeLoginBtn" class="absolute top-4 right-4 text-gray-500 hover:text-gray-700">
+                <i class="bi bi-x-lg"></i>
+            </button>
+            <h2 class="text-2xl font-bold mb-6 text-gray-900">Login</h2>
+            <form id="loginForm">
+                <div class="mb-4">
+                    <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                    <input type="email" id="email" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <div class="mb-6">
+                    <label for="password" class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                    <input type="password" id="password" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <div class="flex items-center justify-between mb-6">
+                    <div class="flex items-center">
+                        <input type="checkbox" id="remember" class="rounded text-blue-600 focus:ring-blue-500">
+                        <label for="remember" class="ml-2 text-sm text-gray-700">Remember me</label>
+                    </div>
+                    <a href="#" class="text-sm text-blue-600 hover:underline">Forgot password?</a>
+                </div>
+                <button type="submit" class="w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Login</button>
+            </form>
+            <p class="mt-4 text-sm text-gray-600 text-center">
+                Don't have an account? <a href="#" id="switchToSignup" class="text-blue-600 hover:underline">Sign up</a>
+            </p>
+            <div class="mt-6 border-t border-gray-200 pt-4">
+                <p class="text-sm text-gray-500 text-center mb-4">Or login with</p>
+                <div class="flex justify-center space-x-4">
+                    <button class="flex items-center justify-center px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50">
+                        <i class="bi bi-google mr-2"></i> Google
+                    </button>
+                    <button class="flex items-center justify-center px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50">
+                        <i class="bi bi-facebook mr-2"></i> Facebook
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Signup Modal -->
+    <div id="signupModal" class="fixed inset-0 flex items-center justify-center z-50 hidden">
+        <div class="fixed inset-0 bg-black opacity-50"></div>
+        <div class="bg-white rounded-lg p-8 max-w-md w-full relative z-10">
+            <button id="closeSignupBtn" class="absolute top-4 right-4 text-gray-500 hover:text-gray-700">
+                <i class="bi bi-x-lg"></i>
+            </button>
+            <h2 class="text-2xl font-bold mb-6 text-gray-900">Sign Up</h2>
+            <form id="signupForm">
+                <div class="grid grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label for="firstName" class="block text-sm font-medium text-gray-700 mb-1">First Name</label>
+                        <input type="text" id="firstName" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label for="lastName" class="block text-sm font-medium text-gray-700 mb-1">Last Name</label>
+                        <input type="text" id="lastName" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                </div>
+                <div class="mb-4">
+                    <label for="signupEmail" class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                    <input type="email" id="signupEmail" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <div class="mb-4">
+                    <label for="signupPassword" class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                    <input type="password" id="signupPassword" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <div class="mb-6">
+                    <label for="confirmPassword" class="block text-sm font-medium text-gray-700 mb-1">Confirm Password</label>
+                    <input type="password" id="confirmPassword" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <div class="flex items-center mb-6">
+                    <input type="checkbox" id="terms" class="rounded text-blue-600 focus:ring-blue-500">
+                    <label for="terms" class="ml-2 text-sm text-gray-700">
+                        I agree to the <a href="#" class="text-blue-600 hover:underline">Terms of Service</a> and <a href="#" class="text-blue-600 hover:underline">Privacy Policy</a>
+                    </label>
+                </div>
+                <button type="submit" class="w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Sign Up</button>
+            </form>
+            <p class="mt-4 text-sm text-gray-600 text-center">
+                Already have an account? <a href="#" id="switchToLogin" class="text-blue-600 hover:underline">Login</a>
+            </p>
+        </div>
+    </div>
+
+    <!-- Seat Selection Modal -->
+    <div id="seatModal" class="fixed inset-0 flex items-center justify-center z-50 hidden">
+        <div class="fixed inset-0 bg-black opacity-50"></div>
+        <div class="bg-white rounded-lg p-6 max-w-4xl w-full relative z-10 max-h-90vh overflow-y-auto">
+            <button id="closeSeatBtn" class="absolute top-4 right-4 text-gray-500 hover:text-gray-700">
+                <i class="bi bi-x-lg"></i>
+            </button>
+            <h2 id="libraryName" class="text-2xl font-bold mb-2 text-gray-900">Central Library</h2>
+            <p id="libraryLocation" class="text-gray-600 mb-4">Downtown, 12 min walk from transit</p>
+            
+            <div class="mb-6 border-b border-gray-200 pb-4">
+                <div class="flex flex-wrap items-center text-sm text-gray-600 gap-4">
+                    <div class="flex items-center">
+                        <i class="bi bi-wifi mr-1"></i>
+                        <span>Free WiFi</span>
+                    </div>
+                    <div class="flex items-center">
+                        <i class="bi bi-plug mr-1"></i>
+                        <span>Power Outlets</span>
+                    </div>
+                    <div class="flex items-center">
+                        <i class="bi bi-cup-hot mr-1"></i>
+                        <span>Cafe Nearby</span>
+                    </div>
+                    <div class="flex items-center">
+                        <i class="bi bi-clock mr-1"></i>
+                        <span>Opens 8:00 AM - 9:00 PM</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mb-6">
+                <h3 class="text-lg font-semibold mb-3">Select Date & Time</h3>
+                <div class="flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4 mb-4">
+                    <div class="flex-1">
+                        <label for="bookingDate" class="block text-sm font-medium text-gray-700 mb-1">Date</label>
+                        <input type="date" id="bookingDate" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                    <div class="flex-1">
+                        <label for="startTime" class="block text-sm font-medium text-gray-700 mb-1">Start Time</label>
+                        <select id="startTime" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                            <option value="8:00">8:00 AM</option>
+                            <option value="9:00">9:00 AM</option>
+                            <option value="10:00">10:00 AM</option>
+                            <option value="11:00">11:00 AM</option>
+                            <option value="12:00">12:00 PM</option>
+                            <option value="13:00">1:00 PM</option>
+                            <option value="14:00">2:00 PM</option>
+                            <option value="15:00">3:00 PM</option>
+                            <option value="16:00">4:00 PM</option>
+                            <option value="17:00">5:00 PM</option>
+                            <option value="18:00">6:00 PM</option>
+                            <option value="19:00">7:00 PM</option>
+                        </select>
+                    </div>
+                    <div class="flex-1">
+                        <label for="duration" class="block text-sm font-medium text-gray-700 mb-1">Duration</label>
+                        <select id="duration" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                            <option value="1">1 hour</option>
+                            <option value="2">2 hours</option>
+                            <option value="3">3 hours</option>
+                            <option value="4">4 hours</option>
+                            <option value="5">5 hours</option>
+                            <option value="6">6 hours</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mb-6">
+                <h3 class="text-lg font-semibold mb-3">Select a Seat</h3>
+                <div class="flex items-center justify-center space-x-4 mb-4 text-sm">
+                    <div class="flex items-center">
+                        <div class="h-4 w-4 bg-green-500 rounded-sm mr-2"></div>
+                        <span>Available</span>
+                    </div>
+                    <div class="flex items-center">
+                        <div class="h-4 w-4 bg-blue-500 rounded-sm mr-2"></div>
+                        <span>Selected</span>
+                    </div>
+                    <div class="flex items-center">
+                        <div class="h-4 w-4 bg-red-500 rounded-sm mr-2"></div>
+                        <span>Unavailable</span>
+                    </div>
+                </div>
+                
+                <div class="p-4 border border-gray-200 rounded-lg bg-gray-50">
+                    <!-- Library entrance -->
+                    <div class="text-center mb-6">
+                        <div class="inline-block px-8 py-2 border-2 border-gray-400 rounded-md font-medium bg-gray-200">ENTRANCE</div>
+                    </div>
+                    
+                    <!-- Seat map -->
+                    <div class="grid grid-cols-5 gap-4 mb-6">
+                        <div id="seat-A1" class="seat seat-available h-12 w-full rounded-md flex items-center justify-center cursor-pointer">A1</div>
+                        <div id="seat-A2" class="seat seat-available h-12 w-full rounded-md flex items-center justify-center cursor-pointer">A2</div>
+                        <div id="seat-A3" class="seat seat-unavailable h-12 w-full rounded-md flex items-center justify-center cursor-pointer">A3</div>
+                        <div id="seat-A4" class="seat seat-available h-12 w-full rounded-md flex items-center justify-center cursor-pointer">A4</div>
+                        <div id="seat-A5" class="seat seat-unavailable h-12 w-full rounded-md flex items-center justify-center cursor-pointer">A5</div>
+                        
+                        <div id="seat-B1" class="seat seat-available h-12 w-full rounded-md flex items-center justify-center cursor-pointer">B1</div>
+                        <div id="seat-B2" class="seat seat-available h-12 w-full rounded-md flex items-center justify-center cursor-pointer">B2</div>
+                        <div id="seat-B3" class="seat seat-available h-12 w-full rounded-md flex items-center justify-center cursor-pointer">B3</div>
+                        <div id="seat-B4" class="seat seat-available h-12 w-full rounded-md flex items-center justify-center cursor-pointer">B4</div>
+                        <div id="seat-B5" class="seat seat-available h-12 w-full rounded-md flex items-center justify-center cursor-pointer">B5</div>
+                        
+                        <div class="col-span-5 h-8 flex items-center justify-center text-gray-500 text-sm">WALKWAY</div>
+                        
+                        <div id="seat-C1" class="seat seat-available h-12 w-full rounded-md flex items-center justify-center cursor-pointer">C1</div>
+                        <div id="seat-C2" class="seat seat-unavailable h-12 w-full rounded-md flex items-center justify-center cursor-pointer">C2</div>
+                        <div id="seat-C3" class="seat seat-unavailable h-12 w-full rounded-md flex items-center justify-center cursor-pointer">C3</div>
+                        <div id="seat-C4" class="seat seat-available h-12 w-full rounded-md flex items-center justify-center cursor-pointer">C4</div>
+                        <div id="seat-C5" class="seat seat-available h-12 w-full rounded-md flex items-center justify-center cursor-pointer">C5</div>
+                        
+                        <div id="seat-D1" class="seat seat-available h-12 w-full rounded-md flex items-center justify-center cursor-pointer">D1</div>
+                        <div id="seat-D2" class="seat seat-available h-12 w-full rounded-md flex items-center justify-center cursor-pointer">D2</div>
+                        <div id="seat-D3" class="seat seat-available h-12 w-full rounded-md flex items-center justify-center cursor-pointer">D3</div>
+                        <div id="seat-D4" class="seat seat-unavailable h-12 w-full rounded-md flex items-center justify-center cursor-pointer">D4</div>
+                        <div id="seat-D5" class="seat seat-available h-12 w-full rounded-md flex items-center justify-center cursor-pointer">D5</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="flex flex-col md:flex-row justify-between items-center border-t border-gray-200 pt-6">
+                <div class="mb-4 md:mb-0">
+                    <h3 class="text-lg font-semibold">Booking Summary</h3>
+                    <p id="summaryText" class="text-gray-600">No seat selected</p>
+                </div>
+                <div class="md:text-right">
+                    <p class="text-2xl font-bold text-gray-900 mb-2" id="totalPrice">$0.00</p>
+                    <button id="checkoutBtn" class="px-8 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed" disabled>Checkout</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Checkout Modal -->
+    <div id="checkoutModal" class="fixed inset-0 flex items-center justify-center z-50 hidden">
+        <div class="fixed inset-0 bg-black opacity-50"></div>
+        <div class="bg-white rounded-lg p-6 max-w-lg w-full relative z-10">
+            <button id="closeCheckoutBtn" class="absolute top-4 right-4 text-gray-500 hover:text-gray-700">
+                <i class="bi bi-x-lg"></i>
+            </button>
+            <h2 class="text-2xl font-bold mb-6 text-gray-900">Complete Your Booking</h2>
+            
+            <div class="mb-6 p-4 bg-gray-50 rounded-lg">
+                <h3 class="font-semibold mb-2">Booking Summary</h3>
+                <div class="flex justify-between mb-1">
+                    <span class="text-gray-600">Library:</span>
+                    <span id="summaryLibrary" class="font-medium">Central Library</span>
+                </div>
+                <div class="flex justify-between mb-1">
+                    <span class="text-gray-600">Seat:</span>
+                    <span id="summarySeat" class="font-medium">A1</span>
+                </div>
+                <div class="flex justify-between mb-1">
+                    <span class="text-gray-600">Date:</span>
+                    <span id="summaryDate" class="font-medium">July 15, 2023</span>
+                </div>
+                <div class="flex justify-between mb-1">
+                    <span class="text-gray-600">Time:</span>
+                    <span id="summaryTime" class="font-medium">10:00 AM - 1:00 PM</span>
+                </div>
+                <div class="flex justify-between pt-2 border-t border-gray-200 mt-2">
+                    <span class="text-gray-900 font-semibold">Total:</span>
+                    <span id="summaryTotal" class="text-gray-900 font-semibold">$15.00</span>
+                </div>
+            </div>
+            
+            <form id="paymentForm">
+                <h3 class="font-semibold mb-4">Payment Details</h3>
+                <div class="mb-4">
+                    <label for="cardName" class="block text-sm font-medium text-gray-700 mb-1">Name on Card</label>
+                    <input type="text" id="cardName" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <div class="mb-4">
+                    <label for="cardNumber" class="block text-sm font-medium text-gray-700 mb-1">Card Number</label>
+                    <div class="relative">
+                        <input type="text" id="cardNumber" placeholder="XXXX XXXX XXXX XXXX" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                        <div class="absolute right-3 top-2.5">
+                            <i class="bi bi-credit-card text-gray-400"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4 mb-6">
+                    <div>
+                        <label for="expiryDate" class="block text-sm font-medium text-gray-700 mb-1">Expiry Date</label>
+                        <input type="text" id="expiryDate" placeholder="MM/YY" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label for="cvv" class="block text-sm font-medium text-gray-700 mb-1">CVV</label>
+                        <input type="text" id="cvv" placeholder="123" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                </div>
+                <button type="submit" class="w-full px-4 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700">Complete Payment</button>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Confirmation Modal -->
+    <div id="confirmationModal" class="fixed inset-0 flex items-center justify-center z-50 hidden">
+        <div class="fixed inset-0 bg-black opacity-50"></div>
+        <div class="bg-white rounded-lg p-6 max-w-md w-full relative z-10 text-center">
+            <div class="text-green-500 mb-4">
+                <i class="bi bi-check-circle text-6xl"></i>
+            </div>
+            <h2 class="text-2xl font-bold mb-2 text-gray-900">Booking Confirmed!</h2>
+            <p class="text-gray-600 mb-6">Your booking has been successfully confirmed. A confirmation email has been sent to your email address.</p>
+            <div class="mb-6 p-4 bg-gray-50 rounded-lg text-left">
+                <div class="flex justify-between mb-1">
+                    <span class="text-gray-600">Booking ID:</span>
+                    <span id="confirmationId" class="font-medium">LIB-12345</span>
+                </div>
+                <div class="flex justify-between mb-1">
+                    <span class="text-gray-600">Library:</span>
+                    <span id="confirmationLibrary" class="font-medium">Central Library</span>
+                </div>
+                <div class="flex justify-between mb-1">
+                    <span class="text-gray-600">Seat:</span>
+                    <span id="confirmationSeat" class="font-medium">A1</span>
+                </div>
+                <div class="flex justify-between mb-1">
+                    <span class="text-gray-600">Date:</span>
+                    <span id="confirmationDate" class="font-medium">July 15, 2023</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gray-600">Time:</span>
+                    <span id="confirmationTime" class="font-medium">10:00 AM - 1:00 PM</span>
+                </div>
+            </div>
+            <div class="flex justify-center space-x-4">
+                <button id="downloadReceiptBtn" class="px-4 py-2 border border-blue-600 text-blue-600 rounded-md hover:bg-blue-50">
+                    <i class="bi bi-download mr-1"></i> Download Receipt
+                </button>
+                <button id="closeConfirmationBtn" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Done</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Owner Dashboard Modal -->
+    <div id="dashboardModal" class="fixed inset-0 flex items-center justify-center z-50 hidden">
+        <div class="fixed inset-0 bg-black opacity-50"></div>
+        <div class="bg-white rounded-lg p-6 max-w-6xl w-full h-5/6 relative z-10 flex flex-col">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-gray-900">Library Owner Dashboard</h2>
+                <button id="closeDashboardBtn" class="text-gray-500 hover:text-gray-700">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+            
+            <!-- Dashboard Tabs -->
+            <div class="mb-6 border-b border-gray-200">
+                <ul class="flex flex-wrap -mb-px text-sm font-medium text-center" role="tablist">
+                    <li class="mr-2" role="presentation">
+                        <button id="overview-tab" class="dashboard-tab inline-block p-4 border-b-2 border-blue-600 rounded-t-lg active" aria-selected="true" role="tab">Overview</button>
+                    </li>
+                    <li class="mr-2" role="presentation">
+                        <button id="bookings-tab" class="dashboard-tab inline-block p-4 border-b-2 border-transparent rounded-t-lg hover:text-gray-600 hover:border-gray-300" aria-selected="false" role="tab">Bookings</button>
+                    </li>
+                    <li class="mr-2" role="presentation">
+                        <button id="seats-tab" class="dashboard-tab inline-block p-4 border-b-2 border-transparent rounded-t-lg hover:text-gray-600 hover:border-gray-300" aria-selected="false" role="tab">Seat Management</button>
+                    </li>
+                    <li class="mr-2" role="presentation">
+                        <button id="earnings-tab" class="dashboard-tab inline-block p-4 border-b-2 border-transparent rounded-t-lg hover:text-gray-600 hover:border-gray-300" aria-selected="false" role="tab">Earnings</button>
+                    </li>
+                    <li role="presentation">
+                        <button id="settings-tab" class="dashboard-tab inline-block p-4 border-b-2 border-transparent rounded-t-lg hover:text-gray-600 hover:border-gray-300" aria-selected="false" role="tab">Settings</button>
+                    </li>
+                </ul>
+            </div>
+            
+            <!-- Tab Content -->
+            <div class="flex-1 overflow-y-auto">
+                <!-- Overview Tab -->
+                <div id="overview-content" class="dashboard-content block">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                        <div class="bg-blue-50 p-4 rounded-lg">
+                            <p class="text-sm text-blue-600 font-medium">Today's Bookings</p>
+                            <p class="text-3xl font-bold">24</p>
+                            <p class="text-green-600 text-sm"><i class="bi bi-arrow-up"></i> 12% from yesterday</p>
+                        </div>
+                        <div class="bg-green-50 p-4 rounded-lg">
+                            <p class="text-sm text-green-600 font-medium">Available Seats</p>
+                            <p class="text-3xl font-bold">16/30</p>
+                            <p class="text-sm">53% occupancy rate</p>
+                        </div>
+                        <div class="bg-purple-50 p-4 rounded-lg">
+                            <p class="text-sm text-purple-600 font-medium">Today's Revenue</p>
+                            <p class="text-3xl font-bold">$238</p>
+                            <p class="text-green-600 text-sm"><i class="bi bi-arrow-up"></i> 8% from yesterday</p>
+                        </div>
+                        <div class="bg-orange-50 p-4 rounded-lg">
+                            <p class="text-sm text-orange-600 font-medium">New Users</p>
+                            <p class="text-3xl font-bold">12</p>
+                            <p class="text-red-600 text-sm"><i class="bi bi-arrow-down"></i> 4% from yesterday</p>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <!-- Recent Bookings -->
+                        <div class="bg-white p-4 rounded-lg shadow-sm">
+                            <div class="flex justify-between items-center mb-4">
+                                <h3 class="text-lg font-semibold">Recent Bookings</h3>
+                                <a href="#" class="text-blue-600 text-sm hover:underline">View all</a>
+                            </div>
+                            <div class="overflow-x-auto">
+                                <table class="min-w-full divide-y divide-gray-200">
+                                    <thead class="bg-gray-50">
+                                        <tr>
+                                            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
+                                            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Seat</th>
+                                            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Time</th>
+                                            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="bg-white divide-y divide-gray-200">
+                                        <tr>
+                                            <td class="px-4 py-4 whitespace-nowrap">Sarah Johnson</td>
+                                            <td class="px-4 py-4 whitespace-nowrap">A3</td>
+                                            <td class="px-4 py-4 whitespace-nowrap">10:00 AM - 12:00 PM</td>
+                                            <td class="px-4 py-4 whitespace-nowrap"><span class="px-2 py-1 text-xs bg-green-100 text-green-800 rounded-full">Active</span></td>
+                                        </tr>
+                                        <tr>
+                                            <td class="px-4 py-4 whitespace-nowrap">James Wilson</td>
+                                            <td class="px-4 py-4 whitespace-nowrap">B2</td>
+                                            <td class="px-4 py-4 whitespace-nowrap">11:00 AM - 2:00 PM</td>
+                                            <td class="px-4 py-4 whitespace-nowrap"><span class="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full">Upcoming</span></td>
+                                        </tr>
+                                        <tr>
+                                            <td class="px-4 py-4 whitespace-nowrap">Michael Brown</td>
+                                            <td class="px-4 py-4 whitespace-nowrap">C5</td>
+                                            <td class="px-4 py-4 whitespace-nowrap">9:00 AM - 11:00 AM</td>
+                                            <td class="px-4 py-4 whitespace-nowrap"><span class="px-2 py-1 text-xs bg-gray-100 text-gray-800 rounded-full">Completed</span></td>
+                                        </tr>
+                                        <tr>
+                                            <td class="px-4 py-4 whitespace-nowrap">Emily Davis</td>
+                                            <td class="px-4 py-4 whitespace-nowrap">D4</td>
+                                            <td class="px-4 py-4 whitespace-nowrap">1:00 PM - 4:00 PM</td>
+                                            <td class="px-4 py-4 whitespace-nowrap"><span class="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full">Upcoming</span></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        
+                        <!-- Earnings Graph -->
+                        <div class="bg-white p-4 rounded-lg shadow-sm">
+                            <h3 class="text-lg font-semibold mb-4">Weekly Earnings</h3>
+                            <div class="h-64 bg-gray-50 flex items-center justify-center rounded-md">
+                                <!-- Placeholder for earnings graph -->
+                                <p class="text-gray-500">Earnings graph will be displayed here</p>
+                            </div>
+                            <div class="mt-4 grid grid-cols-3 gap-4 text-center">
+                                <div>
+                                    <p class="text-sm text-gray-500">This Week</p>
+                                    <p class="text-lg font-semibold">$1,248</p>
+                                </div>
+                                <div>
+                                    <p class="text-sm text-gray-500">Last Week</p>
+                                    <p class="text-lg font-semibold">$1,102</p>
+                                </div>
+                                <div>
+                                    <p class="text-sm text-gray-500">Growth</p>
+                                    <p class="text-lg font-semibold text-green-600">+13.2%</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Bookings Tab -->
+                <div id="bookings-content" class="dashboard-content hidden">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-semibold">All Bookings</h3>
+                        <div class="flex items-center space-x-2">
+                            <input type="text" placeholder="Search bookings..." class="px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                            <button class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Search</button>
+                        </div>
+                    </div>
+                    
+                    <!-- Filter Bar -->
+                    <div class="flex flex-wrap gap-2 mb-4">
+                        <button class="px-3 py-1 bg-blue-600 text-white rounded-md text-sm">All</button>
+                        <button class="px-3 py-1 bg-gray-200 text-gray-800 rounded-md text-sm hover:bg-gray-300">Active</button>
+                        <button class="px-3 py-1 bg-gray-200 text-gray-800 rounded-md text-sm hover:bg-gray-300">Upcoming</button>
+                        <button class="px-3 py-1 bg-gray-200 text-gray-800 rounded-md text-sm hover:bg-gray-300">Completed</button>
+                        <button class="px-3 py-1 bg-gray-200 text-gray-800 rounded-md text-sm hover:bg-gray-300">Cancelled</button>
+                    </div>
+                    
+                    <!-- Bookings Table -->
+                    <div class="overflow-x-auto bg-white shadow-sm rounded-md">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Booking ID</th>
+                                    <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
+                                    <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Seat</th>
+                                    <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                                    <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Time</th>
+                                    <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+                                    <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                    <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                <tr>
+                                    <td class="px-4 py-4 whitespace-nowrap">LIB-1234</td>
+                                    <td class="px-4 py-4 whitespace-nowrap">Sarah Johnson</td>
+                                    <td class="px-4 py-4 whitespace-nowrap">A3</td>
+                                    <td class="px-4 py-4 whitespace-nowrap">07/15/2023</td>
+                                    <td class="px-4 py-4 whitespace-nowrap">10:00 AM - 12:00 PM</td>
+                                    <td class="px-4 py-4 whitespace-nowrap">$10.00</td>
+                                    <td class="px-4 py-4 whitespace-nowrap"><span class="px-2 py-1 text-xs bg-green-100 text-green-800 rounded-full">Active</span></td>
+                                    <td class="px-4 py-4 whitespace-nowrap text-sm">
+                                        <button class="text-blue-600 hover:text-blue-800">View</button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="px-4 py-4 whitespace-nowrap">LIB-1235</td>
+                                    <td class="px-4 py-4 whitespace-nowrap">James Wilson</td>
+                                    <td class="px-4 py-4 whitespace-nowrap">B2</td>
+                                    <td class="px-4 py-4 whitespace-nowrap">07/15/2023</td>
+                                    <td class="px-4 py-4 whitespace-nowrap">11:00 AM - 2:00 PM</td>
+                                    <td class="px-4 py-4 whitespace-nowrap">$15.00</td>
+                                    <td class="px-4 py-4 whitespace-nowrap"><span class="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full">Upcoming</span></td>
+                                    <td class="px-4 py-4 whitespace-nowrap text-sm">
+                                        <button class="text-blue-600 hover:text-blue-800">View</button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="px-4 py-4 whitespace-nowrap">LIB-1236</td>
+                                    <td class="px-4 py-4 whitespace-nowrap">Michael Brown</td>
+                                    <td class="px-4 py-4 whitespace-nowrap">C5</td>
+                                    <td class="px-4 py-4 whitespace-nowrap">07/15/2023</td>
+                                    <td class="px-4 py-4 whitespace-nowrap">9:00 AM - 11:00 AM</td>
+                                    <td class="px-4 py-4 whitespace-nowrap">$10.00</td>
+                                    <td class="px-4 py-4 whitespace-nowrap"><span class="px-2 py-1 text-xs bg-gray-100 text-gray-800 rounded-full">Completed</span></td>
+                                    <td class="px-4 py-4 whitespace-nowrap text-sm">
+                                        <button class="text-blue-600 hover:text-blue-800">View</button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="px-4 py-4 whitespace-nowrap">LIB-1237</td>
+                                    <td class="px-4 py-4 whitespace-nowrap">Emily Davis</td>
+                                    <td class="px-4 py-4 whitespace-nowrap">D4</td>
+                                    <td class="px-4 py-4 whitespace-nowrap">07/15/2023</td>
+                                    <td class="px-4 py-4 whitespace-nowrap">1:00 PM - 4:00 PM</td>
+                                    <td class="px-4 py-4 whitespace-nowrap">$15.00</td>
+                                    <td class="px-4 py-4 whitespace-nowrap"><span class="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full">Upcoming</span></td>
+                                    <td class="px-4 py-4 whitespace-nowrap text-sm">
+                                        <button class="text-blue-600 hover:text-blue-800">View</button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="px-4 py-4 whitespace-nowrap">LIB-1238</td>
+                                    <td class="px-4 py-4 whitespace-nowrap">Robert Jones</td>
+                                    <td class="px-4 py-4 whitespace-nowrap">A1</td>
+                                    <td class="px-4 py-4 whitespace-nowrap">07/14/2023</td>
+                                    <td class="px-4 py-4 whitespace-nowrap">2:00 PM - 5:00 PM</td>
+                                    <td class="px-4 py-4 whitespace-nowrap">$15.00</td>
+                                    <td class="px-4 py-4 whitespace-nowrap"><span class="px-2 py-1 text-xs bg-gray-100 text-gray-800 rounded-full">Completed</span></td>
+                                    <td class="px-4 py-4 whitespace-nowrap text-sm">
+                                        <button class="text-blue-600 hover:text-blue-800">View</button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- Pagination -->
+                    <div class="flex justify-between items-center mt-4">
+                        <p class="text-sm text-gray-600">Showing 1 to 5 of 42 entries</p>
+                        <div class="flex space-x-1">
+                            <button class="px-3 py-1 border border-gray-300 rounded-md text-sm">Previous</button>
+                            <button class="px-3 py-1 bg-blue-600 text-white rounded-md text-sm">1</button>
+                            <button class="px-3 py-1 border border-gray-300 rounded-md text-sm">2</button>
+                            <button class="px-3 py-1 border border-gray-300 rounded-md text-sm">3</button>
+                            <button class="px-3 py-1 border border-gray-300 rounded-md text-sm">Next</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Seat Management Tab -->
+                <div id="seats-content" class="dashboard-content hidden">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-semibold">Seat Management</h3>
+                        <button class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Add New Seat</button>
+                    </div>
+                    
+                    <!-- Seat Map -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                        <div class="bg-white p-4 rounded-lg shadow-sm">
+                            <h4 class="font-medium mb-3">Current Seat Map</h4>
+                            <div class="p-4 border border-gray-200 rounded-lg bg-gray-50">
+                                <!-- Library entrance -->
+                                <div class="text-center mb-6">
+                                    <div class="inline-block px-8 py-2 border-2 border-gray-400 rounded-md font-medium bg-gray-200">ENTRANCE</div>
+                                </div>
+                                
+                                <!-- Seat map -->
+                                <div class="grid grid-cols-5 gap-4 mb-6">
+                                    <div class="seat seat-available h-10 w-full rounded-md flex items-center justify-center cursor-pointer">A1</div>
+                                    <div class="seat seat-available h-10 w-full rounded-md flex items-center justify-center cursor-pointer">A2</div>
+                                    <div class="seat seat-unavailable h-10 w-full rounded-md flex items-center justify-center cursor-pointer">A3</div>
+                                    <div class="seat seat-available h-10 w-full rounded-md flex items-center justify-center cursor-pointer">A4</div>
+                                    <div class="seat seat-unavailable h-10 w-full rounded-md flex items-center justify-center cursor-pointer">A5</div>
+                                    
+                                    <div class="seat seat-available h-10 w-full rounded-md flex items-center justify-center cursor-pointer">B1</div>
+                                    <div class="seat seat-available h-10 w-full rounded-md flex items-center justify-center cursor-pointer">B2</div>
+                                    <div class="seat seat-available h-10 w-full rounded-md flex items-center justify-center cursor-pointer">B3</div>
+                                    <div class="seat seat-available h-10 w-full rounded-md flex items-center justify-center cursor-pointer">B4</div>
+                                    <div class="seat seat-available h-10 w-full rounded-md flex items-center justify-center cursor-pointer">B5</div>
+                                    
+                                    <div class="col-span-5 h-6 flex items-center justify-center text-gray-500 text-sm">WALKWAY</div>
+                                    
+                                    <div class="seat seat-available h-10 w-full rounded-md flex items-center justify-center cursor-pointer">C1</div>
+                                    <div class="seat seat-unavailable h-10 w-full rounded-md flex items-center justify-center cursor-pointer">C2</div>
+                                    <div class="seat seat-unavailable h-10 w-full rounded-md flex items-center justify-center cursor-pointer">C3</div>
+                                    <div class="seat seat-available h-10 w-full rounded-md flex items-center justify-center cursor-pointer">C4</div>
+                                    <div class="seat seat-available h-10 w-full rounded-md flex items-center justify-center cursor-pointer">C5</div>
+                                    
+                                    <div class="seat seat-available h-10 w-full rounded-md flex items-center justify-center cursor-pointer">D1</div>
+                                    <div class="seat seat-available h-10 w-full rounded-md flex items-center justify-center cursor-pointer">D2</div>
+                                    <div class="seat seat-available h-10 w-full rounded-md flex items-center justify-center cursor-pointer">D3</div>
+                                    <div class="seat seat-unavailable h-10 w-full rounded-md flex items-center justify-center cursor-pointer">D4</div>
+                                    <div class="seat seat-available h-10 w-full rounded-md flex items-center justify-center cursor-pointer">D5</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-white p-4 rounded-lg shadow-sm">
+                            <h4 class="font-medium mb-3">Seat Settings</h4>
+                            <div class="mb-4">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Select Seat</label>
+                                <select class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                                    <option>A1</option>
+                                    <option>A2</option>
+                                    <option>A3</option>
+                                    <option>A4</option>
+                                    <option>A5</option>
+                                </select>
+                            </div>
+                            <div class="mb-4">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Seat Type</label>
+                                <select class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                                    <option>Standard</option>
+                                    <option>Premium</option>
+                                    <option>Group</option>
+                                    <option>Quiet Zone</option>
+                                </select>
+                            </div>
+                            <div class="mb-4">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Hourly Rate ($)</label>
+                                <input type="number" value="5.00" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                            </div>
+                            <div class="mb-4">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Seat Status</label>
+                                <select class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                                    <option>Available</option>
+                                    <option>Unavailable</option>
+                                    <option>Maintenance</option>
+                                </select>
+                            </div>
+                            <div class="mb-4">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Amenities</label>
+                                <div class="space-y-2">
+                                    <div class="flex items-center">
+                                        <input type="checkbox" class="rounded text-blue-600 focus:ring-blue-500" checked>
+                                        <label class="ml-2 text-sm text-gray-700">Power Outlet</label>
+                                    </div>
+                                    <div class="flex items-center">
+                                        <input type="checkbox" class="rounded text-blue-600 focus:ring-blue-500" checked>
+                                        <label class="ml-2 text-sm text-gray-700">WiFi Access</label>
+                                    </div>
+                                    <div class="flex items-center">
+                                        <input type="checkbox" class="rounded text-blue-600 focus:ring-blue-500">
+                                        <label class="ml-2 text-sm text-gray-700">USB Charging</label>
+                                    </div>
+                                    <div class="flex items-center">
+                                        <input type="checkbox" class="rounded text-blue-600 focus:ring-blue-500" checked>
+                                        <label class="ml-2 text-sm text-gray-700">Desk Lamp</label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex justify-end space-x-2">
+                                <button class="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50">Reset</button>
+                                <button class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Save Changes</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Seat List -->
+                    <div class="bg-white p-4 rounded-lg shadow-sm">
+                        <div class="flex justify-between items-center mb-4">
+                            <h4 class="font-medium">All Seats</h4>
+                            <input type="text" placeholder="Search seats" class="px-3 py-1 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+                                        <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Seat</th>
+                                        <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                                        <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Hourly Rate</th>
+                                        <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                        <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amenities</th>
+                                        <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-white divide-y divide-gray-200">
+                                    <tr>
+                                        <td class="px-4 py-4 whitespace-nowrap">1</td>
+                                        <td class="px-4 py-4 whitespace-nowrap">A1</td>
+                                        <td class="px-4 py-4 whitespace-nowrap">Standard</td>
+                                        <td class="px-4 py-4 whitespace-nowrap">$5.00</td>
+                                        <td class="px-4 py-4 whitespace-nowrap"><span class="px-2 py-1 text-xs bg-green-100 text-green-800 rounded-full">Available</span></td>
+                                        <td class="px-4 py-4 whitespace-nowrap">Power, WiFi, Lamp</td>
+                                        <td class="px-4 py-4 whitespace-nowrap text-sm">
+                                            <button class="text-blue-600 hover:text-blue-800 mr-2">Edit</button>
+                                            <button class="text-red-600 hover:text-red-800">Delete</button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="px-4 py-4 whitespace-nowrap">2</td>
+                                        <td class="px-4 py-4 whitespace-nowrap">A2</td>
+                                        <td class="px-4 py-4 whitespace-nowrap">Standard</td>
+                                        <td class="px-4 py-4 whitespace-nowrap">$5.00</td>
+                                        <td class="px-4 py-4 whitespace-nowrap"><span class="px-2 py-1 text-xs bg-green-100 text-green-800 rounded-full">Available</span></td>
+                                        <td class="px-4 py-4 whitespace-nowrap">Power, WiFi, Lamp</td>
+                                        <td class="px-4 py-4 whitespace-nowrap text-sm">
+                                            <button class="text-blue-600 hover:text-blue-800 mr-2">Edit</button>
+                                            <button class="text-red-600 hover:text-red-800">Delete</button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="px-4 py-4 whitespace-nowrap">3</td>
+                                        <td class="px-4 py-4 whitespace-nowrap">A3</td>
+                                        <td class="px-4 py-4 whitespace-nowrap">Premium</td>
+                                        <td class="px-4 py-4 whitespace-nowrap">$6.50</td>
+                                        <td class="px-4 py-4 whitespace-nowrap"><span class="px-2 py-1 text-xs bg-red-100 text-red-800 rounded-full">Unavailable</span></td>
+                                        <td class="px-4 py-4 whitespace-nowrap">Power, WiFi, USB, Lamp</td>
+                                        <td class="px-4 py-4 whitespace-nowrap text-sm">
+                                            <button class="text-blue-600 hover:text-blue-800 mr-2">Edit</button>
+                                            <button class="text-red-600 hover:text-red-800">Delete</button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Earnings Tab -->
+                <div id="earnings-content" class="dashboard-content hidden">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                        <div class="bg-white p-4 rounded-lg shadow-sm">
+                            <h4 class="font-medium mb-3">Today's Earnings</h4>
+                            <p class="text-3xl font-bold mb-2">$238.50</p>
+                            <div class="flex items-center text-sm">
+                                <span class="text-green-600 mr-1"><i class="bi bi-arrow-up"></i> 12%</span>
+                                <span class="text-gray-600">from yesterday</span>
+                            </div>
+                        </div>
+                        <div class="bg-white p-4 rounded-lg shadow-sm">
+                            <h4 class="font-medium mb-3">This Week</h4>
+                            <p class="text-3xl font-bold mb-2">$1,248.75</p>
+                            <div class="flex items-center text-sm">
+                                <span class="text-green-600 mr-1"><i class="bi bi-arrow-up"></i> 8%</span>
+                                <span class="text-gray-600">from last week</span>
+                            </div>
+                        </div>
+                        <div class="bg-white p-4 rounded-lg shadow-sm">
+                            <h4 class="font-medium mb-3">This Month</h4>
+                            <p class="text-3xl font-bold mb-2">$4,562.25</p>
+                            <div class="flex items-center text-sm">
+                                <span class="text-green-600 mr-1"><i class="bi bi-arrow-up"></i> 15%</span>
+                                <span class="text-gray-600">from last month</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Earnings Chart -->
+                    <div class="bg-white p-4 rounded-lg shadow-sm mb-6">
+                        <div class="flex justify-between items-center mb-4">
+                            <h4 class="font-medium">Earnings Overview</h4>
+                            <select class="px-3 py-1 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                                <option>Last 7 days</option>
+                                <option>Last 30 days</option>
+                                <option>Last 90 days</option>
+                                <option>Last 12 months</option>
+                            </select>
+                        </div>
+                        <div class="h-80 bg-gray-50 flex items-center justify-center rounded-md">
+                            <!-- Placeholder for earnings chart -->
+                            <p class="text-gray-500">Earnings chart will be displayed here</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Transaction History -->
+                    <div class="bg-white p-4 rounded-lg shadow-sm">
+                        <div class="flex justify-between items-center mb-4">
+                            <h4 class="font-medium">Transaction History</h4>
+                            <button class="px-3 py-1 text-sm text-blue-600 hover:text-blue-800">Export</button>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Transaction ID</th>
+                                        <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                                        <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
+                                        <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
+                                        <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+                                        <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-white divide-y divide-gray-200">
+                                    <tr>
+                                        <td class="px-4 py-4 whitespace-nowrap">TRX-123456</td>
+                                        <td class="px-4 py-4 whitespace-nowrap">07/15/2023</td>
+                                        <td class="px-4 py-4 whitespace-nowrap">Sarah Johnson</td>
+                                        <td class="px-4 py-4 whitespace-nowrap">Booking: Seat A3 (2 hours)</td>
+                                        <td class="px-4 py-4 whitespace-nowrap">$10.00</td>
+                                        <td class="px-4 py-4 whitespace-nowrap"><span class="px-2 py-1 text-xs bg-green-100 text-green-800 rounded-full">Completed</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="px-4 py-4 whitespace-nowrap">TRX-123457</td>
+                                        <td class="px-4 py-4 whitespace-nowrap">07/15/2023</td>
+                                        <td class="px-4 py-4 whitespace-nowrap">James Wilson</td>
+                                        <td class="px-4 py-4 whitespace-nowrap">Booking: Seat B2 (3 hours)</td>
+                                        <td class="px-4 py-4 whitespace-nowrap">$15.00</td>
+                                        <td class="px-4 py-4 whitespace-nowrap"><span class="px-2 py-1 text-xs bg-green-100 text-green-800 rounded-full">Completed</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="px-4 py-4 whitespace-nowrap">TRX-123458</td>
+                                        <td class="px-4 py-4 whitespace-nowrap">07/15/2023</td>
+                                        <td class="px-4 py-4 whitespace-nowrap">Michael Brown</td>
+                                        <td class="px-4 py-4 whitespace-nowrap">Booking: Seat C5 (2 hours)</td>
+                                        <td class="px-4 py-4 whitespace-nowrap">$10.00</td>
+                                        <td class="px-4 py-4 whitespace-nowrap"><span class="px-2 py-1 text-xs bg-green-100 text-green-800 rounded-full">Completed</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="px-4 py-4 whitespace-nowrap">TRX-123459</td>
+                                        <td class="px-4 py-4 whitespace-nowrap">07/15/2023</td>
+                                        <td class="px-4 py-4 whitespace-nowrap">Emily Davis</td>
+                                        <td class="px-4 py-4 whitespace-nowrap">Booking: Seat D4 (3 hours)</td>
+                                        <td class="px-4 py-4 whitespace-nowrap">$15.00</td>
+                                        <td class="px-4 py-4 whitespace-nowrap"><span class="px-2 py-1 text-xs bg-green-100 text-green-800 rounded-full">Completed</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="px-4 py-4 whitespace-nowrap">TRX-123460</td>
+                                        <td class="px-4 py-4 whitespace-nowrap">07/14/2023</td>
+                                        <td class="px-4 py-4 whitespace-nowrap">Robert Jones</td>
+                                        <td class="px-4 py-4 whitespace-nowrap">Booking: Seat A1 (3 hours)</td>
+                                        <td class="px-4 py-4 whitespace-nowrap">$15.00</td>
+                                        <td class="px-4 py-4 whitespace-nowrap"><span class="px-2 py-1 text-xs bg-green-100 text-green-800 rounded-full">Completed</span></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Settings Tab -->
+                <div id="settings-content" class="dashboard-content hidden">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div class="col-span-2">
+                            <div class="bg-white p-6 rounded-lg shadow-sm mb-6">
+                                <h3 class="text-lg font-semibold mb-4">Library Information</h3>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div class="col-span-2 sm:col-span-1">
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Library Name</label>
+                                        <input type="text" value="Central Library" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                                    </div>
+                                    <div class="col-span-2 sm:col-span-1">
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
+                                        <input type="email" value="contact@centrallibrary.com" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                                    </div>
+                                    <div class="col-span-2">
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Address</label>
+                                        <input type="text" value="123 Main Street, Downtown" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                                    </div>
+                                    <div class="col-span-2 sm:col-span-1">
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">City</label>
+                                        <input type="text" value="New York" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                                    </div>
+                                    <div class="col-span-2 sm:col-span-1">
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Zip Code</label>
+                                        <input type="text" value="10001" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                                    </div>
+                                    <div class="col-span-2 sm:col-span-1">
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
+                                        <input type="text" value="(555) 123-4567" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                                    </div>
+                                    <div class="col-span-2 sm:col-span-1">
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Website</label>
+                                        <input type="text" value="www.centrallibrary.com" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                                    </div>
+                                </div>
+                                <div class="mt-4">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                                    <textarea rows="3" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">Central Library offers a peaceful environment for studying and reading with modern amenities and helpful staff.</textarea>
+                                </div>
+                                <div class="mt-4 flex justify-end">
+                                    <button class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Save Changes</button>
+                                </div>
+                            </div>
+                            
+                            <div class="bg-white p-6 rounded-lg shadow-sm">
+                                <h3 class="text-lg font-semibold mb-4">Operation Settings</h3>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Opening Time</label>
+                                        <input type="time" value="08:00" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Closing Time</label>
+                                        <input type="time" value="21:00" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                                    </div>
+                                </div>
+                                <div class="mb-4">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Days Open</label>
+                                    <div class="grid grid-cols-4 gap-2">
+                                        <div class="flex items-center">
+                                            <input type="checkbox" class="rounded text-blue-600 focus:ring-blue-500" checked>
+                                            <label class="ml-2 text-sm text-gray-700">Monday</label>
+                                        </div>
+                                        <div class="flex items-center">
+                                            <input type="checkbox" class="rounded text-blue-600 focus:ring-blue-500" checked>
+                                            <label class="ml-2 text-sm text-gray-700">Tuesday</label>
+                                        </div>
+                                        <div class="flex items-center">
+                                            <input type="checkbox" class="rounded text-blue-600 focus:ring-blue-500" checked>
+                                            <label class="ml-2 text-sm text-gray-700">Wednesday</label>
+                                        </div>
+                                        <div class="flex items-center">
+                                            <input type="checkbox" class="rounded text-blue-600 focus:ring-blue-500" checked>
+                                            <label class="ml-2 text-sm text-gray-700">Thursday</label>
+                                        </div>
+                                        <div class="flex items-center">
+                                            <input type="checkbox" class="rounded text-blue-600 focus:ring-blue-500" checked>
+                                            <label class="ml-2 text-sm text-gray-700">Friday</label>
+                                        </div>
+                                        <div class="flex items-center">
+                                            <input type="checkbox" class="rounded text-blue-600 focus:ring-blue-500" checked>
+                                            <label class="ml-2 text-sm text-gray-700">Saturday</label>
+                                        </div>
+                                        <div class="flex items-center">
+                                            <input type="checkbox" class="rounded text-blue-600 focus:ring-blue-500">
+                                            <label class="ml-2 text-sm text-gray-700">Sunday</label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Standard Hourly Rate ($)</label>
+                                        <input type="number" value="5.00" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Premium Hourly Rate ($)</label>
+                                        <input type="number" value="6.50" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                                    </div>
+                                </div>
+                                <div class="mb-4">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Booking Rules</label>
+                                    <div class="space-y-2">
+                                        <div class="flex items-center">
+                                            <input type="checkbox" class="rounded text-blue-600 focus:ring-blue-500" checked>
+                                            <label class="ml-2 text-sm text-gray-700">Allow same-day bookings</label>
+                                        </div>
+                                        <div class="flex items-center">
+                                            <input type="checkbox" class="rounded text-blue-600 focus:ring-blue-500" checked>
+                                            <label class="ml-2 text-sm text-gray-700">Allow advance bookings up to 7 days</label>
+                                        </div>
+                                        <div class="flex items-center">
+                                            <input type="checkbox" class="rounded text-blue-600 focus:ring-blue-500" checked>
+                                            <label class="ml-2 text-sm text-gray-700">Allow cancellations up to 2 hours before</label>
+                                        </div>
+                                        <div class="flex items-center">
+                                            <input type="checkbox" class="rounded text-blue-600 focus:ring-blue-500">
+                                            <label class="ml-2 text-sm text-gray-700">Apply no-show penalty</label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="mt-4 flex justify-end">
+                                    <button class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Save Settings</button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <div class="bg-white p-6 rounded-lg shadow-sm mb-6">
+                                <h3 class="text-lg font-semibold mb-4">Notification Settings</h3>
+                                <div class="mb-4">
+                                    <h4 class="text-sm font-medium text-gray-700 mb-2">Email Notifications</h4>
+                                    <div class="space-y-2">
+                                        <div class="flex items-center">
+                                            <input type="checkbox" class="rounded text-blue-600 focus:ring-blue-500" checked>
+                                            <label class="ml-2 text-sm text-gray-700">New bookings</label>
+                                        </div>
+                                        <div class="flex items-center">
+                                            <input type="checkbox" class="rounded text-blue-600 focus:ring-blue-500" checked>
+                                            <label class="ml-2 text-sm text-gray-700">Cancellations</label>
+                                        </div>
+                                        <div class="flex items-center">
+                                            <input type="checkbox" class="rounded text-blue-600 focus:ring-blue-500" checked>
+                                            <label class="ml-2 text-sm text-gray-700">Payment confirmations</label>
+                                        </div>
+                                        <div class="flex items-center">
+                                            <input type="checkbox" class="rounded text-blue-600 focus:ring-blue-500" checked>
+                                            <label class="ml-2 text-sm text-gray-700">Daily summary</label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="mb-4">
+                                    <h4 class="text-sm font-medium text-gray-700 mb-2">Push Notifications</h4>
+                                    <div class="space-y-2">
+                                        <div class="flex items-center">
+                                            <input type="checkbox" class="rounded text-blue-600 focus:ring-blue-500" checked>
+                                            <label class="ml-2 text-sm text-gray-700">New bookings</label>
+                                        </div>
+                                        <div class="flex items-center">
+                                            <input type="checkbox" class="rounded text-blue-600 focus:ring-blue-500" checked>
+                                            <label class="ml-2 text-sm text-gray-700">Cancellations</label>
+                                        </div>
+                                        <div class="flex items-center">
+                                            <input type="checkbox" class="rounded text-blue-600 focus:ring-blue-500">
+                                            <label class="ml-2 text-sm text-gray-700">Payment confirmations</label>
+                                        </div>
+                                        <div class="flex items-center">
+                                            <input type="checkbox" class="rounded text-blue-600 focus:ring-blue-500">
+                                            <label class="ml-2 text-sm text-gray-700">Customer messages</label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="mt-4 flex justify-end">
+                                    <button class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Save Preferences</button>
+                                </div>
+                            </div>
+                            
+                            <div class="bg-white p-6 rounded-lg shadow-sm">
+                                <h3 class="text-lg font-semibold mb-4">Payment Settings</h3>
+                                <div class="mb-4">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Payment Methods</label>
+                                    <div class="space-y-2">
+                                        <div class="flex items-center">
+                                            <input type="checkbox" class="rounded text-blue-600 focus:ring-blue-500" checked>
+                                            <label class="ml-2 text-sm text-gray-700">Credit/Debit Cards</label>
+                                        </div>
+                                        <div class="flex items-center">
+                                            <input type="checkbox" class="rounded text-blue-600 focus:ring-blue-500" checked>
+                                            <label class="ml-2 text-sm text-gray-700">PayPal</label>
+                                        </div>
+                                        <div class="flex items-center">
+                                            <input type="checkbox" class="rounded text-blue-600 focus:ring-blue-500">
+                                            <label class="ml-2 text-sm text-gray-700">Apple Pay</label>
+                                        </div>
+                                        <div class="flex items-center">
+                                            <input type="checkbox" class="rounded text-blue-600 focus:ring-blue-500">
+                                            <label class="ml-2 text-sm text-gray-700">Google Pay</label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="mb-4">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Payment Account Email</label>
+                                    <input type="email" value="payments@centrallibrary.com" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                                </div>
+                                <div class="mt-4 flex justify-end">
+                                    <button class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Save Settings</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set current date for date inputs
+            const today = new Date();
+            const formattedDate = today.toISOString().split('T')[0];
+            if (document.getElementById('date')) {
+                document.getElementById('date').value = formattedDate;
+            }
+            if (document.getElementById('bookingDate')) {
+                document.getElementById('bookingDate').value = formattedDate;
+            }
+            
+            // Mobile menu toggle
+            const menuBtn = document.getElementById('menuBtn');
+            const mobileMenu = document.getElementById('mobileMenu');
+            if (menuBtn && mobileMenu) {
+                menuBtn.addEventListener('click', function() {
+                    mobileMenu.classList.toggle('hidden');
+                });
+            }
+            
+            // Login modal
+            const loginBtn = document.getElementById('loginBtn');
+            const loginModal = document.getElementById('loginModal');
+            const closeLoginBtn = document.getElementById('closeLoginBtn');
+            const switchToSignup = document.getElementById('switchToSignup');
+            
+            if (loginBtn && loginModal) {
+                loginBtn.addEventListener('click', function() {
+                    loginModal.classList.remove('hidden');
+                });
+            }
+            
+            if (closeLoginBtn && loginModal) {
+                closeLoginBtn.addEventListener('click', function() {
+                    loginModal.classList.add('hidden');
+                });
+            }
+            
+            // Signup modal
+            const signupBtn = document.getElementById('signupBtn');
+            const signupModal = document.getElementById('signupModal');
+            const closeSignupBtn = document.getElementById('closeSignupBtn');
+            const switchToLogin = document.getElementById('switchToLogin');
+            
+            if (signupBtn && signupModal) {
+                signupBtn.addEventListener('click', function() {
+                    signupModal.classList.remove('hidden');
+                });
+            }
+            
+            if (closeSignupBtn && signupModal) {
+                closeSignupBtn.addEventListener('click', function() {
+                    signupModal.classList.add('hidden');
+                });
+            }
+            
+            // Switch between login and signup
+            if (switchToSignup) {
+                switchToSignup.addEventListener('click', function() {
+                    loginModal.classList.add('hidden');
+                    signupModal.classList.remove('hidden');
+                });
+            }
+            
+            if (switchToLogin) {
+                switchToLogin.addEventListener('click', function() {
+                    signupModal.classList.add('hidden');
+                    loginModal.classList.remove('hidden');
+                });
+            }
+            
+            // Seat selection modal
+            const viewSeatsButtons = document.querySelectorAll('.view-seats-btn');
+            const seatModal = document.getElementById('seatModal');
+            const closeSeatBtn = document.getElementById('closeSeatBtn');
+            const seats = document.querySelectorAll('.seat');
+            const summaryText = document.getElementById('summaryText');
+            const totalPrice = document.getElementById('totalPrice');
+            const checkoutBtn = document.getElementById('checkoutBtn');
+            
+            let libraryDetails = {
+                'central': {
+                    name: 'Central Library',
+                    location: 'Downtown, 12 min walk from transit',
+                    hourlyRate: 5.00
+                },
+                'university': {
+                    name: 'University Library',
+                    location: 'Campus, 5 min walk from bus stop',
+                    hourlyRate: 4.50
+                },
+                'tech': {
+                    name: 'Tech Hub',
+                    location: 'Uptown, 8 min walk from transit',
+                    hourlyRate: 6.50
+                }
+            };
+            
+            // View seats buttons
+            if (viewSeatsButtons.length > 0 && seatModal) {
+                viewSeatsButtons.forEach(button => {
+                    button.addEventListener('click', function() {
+                        const libraryId = this.getAttribute('data-library');
+                        const library = libraryDetails[libraryId];
+                        
+                        if (library) {
+                            document.getElementById('libraryName').textContent = library.name;
+                            document.getElementById('libraryLocation').textContent = library.location;
+                        }
+                        
+                        seatModal.classList.remove('hidden');
+                    });
+                });
+            }
+            
+            if (closeSeatBtn && seatModal) {
+                closeSeatBtn.addEventListener('click', function() {
+                    seatModal.classList.add('hidden');
+                });
+            }
+            
+            // Seat selection
+            let selectedSeat = null;
+            let hourlyRate = 5.00;
+            
+            if (seats.length > 0) {
+                seats.forEach(seat => {
+                    if (!seat.classList.contains('seat-unavailable')) {
+                        seat.addEventListener('click', function() {
+                            // Remove selection from previous seat
+                            if (selectedSeat) {
+                                selectedSeat.classList.remove('seat-selected');
+                                selectedSeat.classList.add('seat-available');
+                            }
+                            
+                            // Select this seat
+                            this.classList.remove('seat-available');
+                            this.classList.add('seat-selected');
+                            selectedSeat = this;
+                            
+                            // Update summary
+                            const seatId = this.id.replace('seat-', '');
+                            const duration = document.getElementById('duration').value;
+                            const cost = hourlyRate * parseInt(duration);
+                            
+                            summaryText.textContent = `Seat ${seatId} for ${duration} hour${duration > 1 ? 's' : ''}`;
+                            totalPrice.textContent = `$${cost.toFixed(2)}`;
+                            
+                            // Enable checkout button
+                            checkoutBtn.disabled = false;
+                        });
+                    }
+                });
+            }
+            
+            // Duration change updates price
+            const durationSelect = document.getElementById('duration');
+            if (durationSelect) {
+                durationSelect.addEventListener('change', function() {
+                    if (selectedSeat) {
+                        const duration = parseInt(this.value);
+                        const cost = hourlyRate * duration;
+                        const seatId = selectedSeat.id.replace('seat-', '');
+                        
+                        summaryText.textContent = `Seat ${seatId} for ${duration} hour${duration > 1 ? 's' : ''}`;
+                        totalPrice.textContent = `$${cost.toFixed(2)}`;
+                    }
+                });
+            }
+            
+            // Checkout process
+            const checkoutModal = document.getElementById('checkoutModal');
+            const closeCheckoutBtn = document.getElementById('closeCheckoutBtn');
+            
+            if (checkoutBtn && checkoutModal) {
+                checkoutBtn.addEventListener('click', function() {
+                    if (selectedSeat) {
+                        seatModal.classList.add('hidden');
+                        checkoutModal.classList.remove('hidden');
+                        
+                        // Update checkout summary
+                        const seatId = selectedSeat.id.replace('seat-', '');
+                        const duration = document.getElementById('duration').value;
+                        const cost = hourlyRate * parseInt(duration);
+                        const date = document.getElementById('bookingDate').value;
+                        const startTime = document.getElementById('startTime').value;
+                        
+                        let formattedDate = new Date(date);
+                        formattedDate = formattedDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+                        
+                        // Convert military time to standard time
+                        let formattedStartTime = startTime;
+                        let startHour = parseInt(startTime.split(':')[0]);
+                        const startAmPm = startHour >= 12 ? 'PM' : 'AM';
+                        startHour = startHour % 12 || 12;
+                        formattedStartTime = `${startHour}:00 ${startAmPm}`;
+                        
+                        // Calculate end time
+                        let endHour = parseInt(startTime.split(':')[0]) + parseInt(duration);
+                        const endAmPm = endHour >= 12 ? 'PM' : 'AM';
+                        endHour = endHour % 12 || 12;
+                        const formattedEndTime = `${endHour}:00 ${endAmPm}`;
+                        
+                        document.getElementById('summaryLibrary').textContent = document.getElementById('libraryName').textContent;
+                        document.getElementById('summarySeat').textContent = seatId;
+                        document.getElementById('summaryDate').textContent = formattedDate;
+                        document.getElementById('summaryTime').textContent = `${formattedStartTime} - ${formattedEndTime}`;
+                        document.getElementById('summaryTotal').textContent = `$${cost.toFixed(2)}`;
+                    }
+                });
+            }
+            
+            if (closeCheckoutBtn && checkoutModal) {
+                closeCheckoutBtn.addEventListener('click', function() {
+                    checkoutModal.classList.add('hidden');
+                });
+            }
+            
+            // Payment form submission
+            const paymentForm = document.getElementById('paymentForm');
+            const confirmationModal = document.getElementById('confirmationModal');
+            
+            if (paymentForm) {
+                paymentForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    
+                    // Simulate payment processing
+                    checkoutModal.classList.add('hidden');
+                    confirmationModal.classList.remove('hidden');
+                    
+                    // Update confirmation details
+                    const bookingId = 'LIB-' + Math.floor(10000 + Math.random() * 90000);
+                    document.getElementById('confirmationId').textContent = bookingId;
+                    document.getElementById('confirmationLibrary').textContent = document.getElementById('summaryLibrary').textContent;
+                    document.getElementById('confirmationSeat').textContent = document.getElementById('summarySeat').textContent;
+                    document.getElementById('confirmationDate').textContent = document.getElementById('summaryDate').textContent;
+                    document.getElementById('confirmationTime').textContent = document.getElementById('summaryTime').textContent;
+                });
+            }
+            
+            // Close confirmation modal
+            const closeConfirmationBtn = document.getElementById('closeConfirmationBtn');
+            
+            if (closeConfirmationBtn && confirmationModal) {
+                closeConfirmationBtn.addEventListener('click', function() {
+                    confirmationModal.classList.add('hidden');
+                });
+            }
+            
+            // Download receipt - simulate download
+            const downloadReceiptBtn = document.getElementById('downloadReceiptBtn');
+            
+            if (downloadReceiptBtn) {
+                downloadReceiptBtn.addEventListener('click', function() {
+                    alert('Receipt download started.');
+                });
+            }
+            
+            // Dashboard functionality
+            const dashboardBtn = document.getElementById('dashboardBtn');
+            const dashboardModal = document.getElementById('dashboardModal');
+            const closeDashboardBtn = document.getElementById('closeDashboardBtn');
+            
+            // Show dashboard button if user is already logged in (for demo purposes)
+            // In a real app, this would check authentication state
+            const showOwnerUI = function() {
+                if (loginBtn && signupBtn && dashboardBtn) {
+                    loginBtn.classList.add('hidden');
+                    signupBtn.classList.add('hidden');
+                    dashboardBtn.classList.remove('hidden');
+                }
+            };
+            
+            // For demo purposes - successful login shows owner UI
+            if (document.getElementById('loginForm')) {
+                document.getElementById('loginForm').addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    loginModal.classList.add('hidden');
+                    showOwnerUI();
+                });
+            }
+            
+            if (dashboardBtn && dashboardModal) {
+                dashboardBtn.addEventListener('click', function() {
+                    dashboardModal.classList.remove('hidden');
+                });
+            }
+            
+            if (closeDashboardBtn && dashboardModal) {
+                closeDashboardBtn.addEventListener('click', function() {
+                    dashboardModal.classList.add('hidden');
+                });
+            }
+            
+            // Dashboard tabs
+            const dashboardTabs = document.querySelectorAll('.dashboard-tab');
+            const dashboardContents = document.querySelectorAll('.dashboard-content');
+            
+            if (dashboardTabs.length > 0 && dashboardContents.length > 0) {
+                dashboardTabs.forEach(tab => {
+                    tab.addEventListener('click', function() {
+                        // Remove active state from all tabs
+                        dashboardTabs.forEach(t => {
+                            t.classList.remove('border-blue-600');
+                            t.classList.add('border-transparent');
+                            t.classList.add('hover:text-gray-600', 'hover:border-gray-300');
+                            t.setAttribute('aria-selected', 'false');
+                        });
+                        
+                        // Add active state to clicked tab
+                        this.classList.remove('border-transparent', 'hover:text-gray-600', 'hover:border-gray-300');
+                        this.classList.add('border-blue-600');
+                        this.setAttribute('aria-selected', 'true');
+                        
+                        // Hide all content
+                        dashboardContents.forEach(content => {
+                            content.classList.add('hidden');
+                        });
+                        
+                        // Show relevant content
+                        const contentId = this.id.replace('-tab', '-content');
+                        document.getElementById(contentId).classList.remove('hidden');
+                    });
+                });
+            }
+            
+            // For demonstration - show login/dashboard after clicking 'Find a Seat Now'
+            const findSeatBtn = document.getElementById('findSeatBtn');
+            if (findSeatBtn) {
+                findSeatBtn.addEventListener('click', function() {
+                    const librarySection = document.getElementById('libraries');
+                    if (librarySection) {
+                        librarySection.scrollIntoView({ behavior: 'smooth' });
+                    }
+                });
+            }
+            
+            // For demonstration - make search button functional
+            const searchBtn = document.getElementById('searchBtn');
+            if (searchBtn) {
+                searchBtn.addEventListener('click', function() {
+                    const librarySection = document.getElementById('libraries');
+                    if (librarySection) {
+                        librarySection.scrollIntoView({ behavior: 'smooth' });
+                    }
+                });
+            }
+        });
+    </script>
+<script>document.body.addEventListener('wheel', e => { if (!e.ctrlKey) return; e.preventDefault(); return }, { passive: false })</script>
+	</body>
+</html>
